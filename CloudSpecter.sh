@@ -42,49 +42,72 @@ echo -e "${RANDOM_COLOR}
                                                                   - @ManiarViral                                                                                                                                                                       
 ${NC}"
 
+#!/usr/bin/env bash
+
+# ---------------- CONFIG ----------------
 export AWS_EC2_METADATA_DISABLED=true
 set -o pipefail
 
-TESTFILE="hacker.txt"
+TESTFILE="frogy.txt"
 TMPDIR="$(mktemp -d)"
 GREEN="\e[92m"; RED="\e[91m"; YELLOW="\e[93m"; NC="\e[0m"
 
-cleanup() { rm -f "$TESTFILE"; rm -rf "$TMPDIR"; }
+cleanup() {
+    rm -f "$TESTFILE"
+    rm -rf "$TMPDIR"
+}
 trap cleanup EXIT
 
 log()   { echo -e "${GREEN}[*] $1${NC}"; }
 warn()  { echo -e "${YELLOW}[!] $1${NC}"; }
 error() { echo -e "${RED}[X] $1${NC}"; }
 
-require_cmd() { command -v "$1" &>/dev/null || { error "Missing command: $1"; exit 1; }; }
+require_cmd() {
+    command -v "$1" &>/dev/null || { error "Missing dependency: $1"; exit 1; }
+}
 
-echo "hacker was here" > "$TESTFILE"
+echo "Frogy_was_here" > "$TESTFILE"
 
 # ---------------- AWS ----------------
 check_aws() {
     require_cmd aws
     BUCKET="$1"
     AWS_ARGS=""
+    READABLE=false
+    WRITABLE=false
     SEVERITY="INFO"
+
+    OUTPUT_FILE="files_${BUCKET}.txt"
+    > "$OUTPUT_FILE"
 
     log "Checking AWS S3 bucket: $BUCKET"
 
-    aws sts get-caller-identity &>/dev/null || AWS_ARGS="--no-sign-request"
+    # Determine credentials / public access
+    aws sts get-caller-identity &>/dev/null || {
+        warn "AWS credentials not found. Using public access (--no-sign-request)"
+        AWS_ARGS="--no-sign-request"
+    }
 
+    # READ
     aws s3 ls "s3://$BUCKET" $AWS_ARGS \
         >"$TMPDIR/aws_read.out" 2>"$TMPDIR/aws_read.err"
-    READABLE=false
-    WRITABLE=false
 
     if [ $? -eq 0 ]; then
         READABLE=true
         log "Bucket is readable"
+
+        if [ "$AWS_ARGS" = "--no-sign-request" ]; then
+            log "Dumping public objects to $OUTPUT_FILE"
+            aws s3 ls "s3://$BUCKET" --recursive --no-sign-request \
+            | awk '{print "https://'${BUCKET}'.s3.amazonaws.com/"$4}' >> "$OUTPUT_FILE"
+        fi
     else
         warn "Bucket not readable"
         cat "$TMPDIR/aws_read.err"
     fi
 
-    # Write test
+    # WRITE
+    log "Testing WRITE access"
     aws s3 cp "$TESTFILE" "s3://$BUCKET/$TESTFILE" $AWS_ARGS \
         >"$TMPDIR/aws_write.out" 2>"$TMPDIR/aws_write.err"
 
@@ -96,18 +119,18 @@ check_aws() {
         warn "Bucket is NOT writable"
     fi
 
-    # Severity rating
-    if [ "$READABLE" = true ] && [ "$WRITABLE" = true ] && [ "$AWS_ARGS" != "" ]; then
-        SEVERITY="CRITICAL (anonymous write)"
-    elif [ "$READABLE" = true ] && [ "$WRITABLE" = false ] && [ "$AWS_ARGS" != "" ]; then
+    # SEVERITY
+    if $READABLE && $WRITABLE && [ "$AWS_ARGS" != "" ]; then
+        SEVERITY="CRITICAL (anonymous read/write)"
+    elif $READABLE && ! $WRITABLE && [ "$AWS_ARGS" != "" ]; then
         SEVERITY="HIGH (anonymous read)"
-    elif [ "$READABLE" = true ] && [ "$WRITABLE" = true ]; then
+    elif $READABLE && $WRITABLE; then
         SEVERITY="MEDIUM (authenticated write)"
-    elif [ "$READABLE" = true ]; then
+    elif $READABLE; then
         SEVERITY="LOW (authenticated read)"
     fi
 
-    log "Severity Rating: $SEVERITY"
+    log "Severity: $SEVERITY"
 }
 
 # ---------------- GCP ----------------
@@ -115,26 +138,40 @@ check_gcp() {
     require_cmd gsutil
     BUCKET="$1"
     GS_ARGS=""
+    READABLE=false
+    WRITABLE=false
     SEVERITY="INFO"
+
+    OUTPUT_FILE="files_${BUCKET}.txt"
+    > "$OUTPUT_FILE"
 
     log "Checking GCP GCS bucket: $BUCKET"
 
-    gcloud auth list --format="value(account)" | grep -q . || GS_ARGS="-n"
+    gcloud auth list --format="value(account)" | grep -q . || {
+        warn "GCP credentials not found. Using anonymous access"
+        GS_ARGS="-n"
+    }
 
+    # READ
     gsutil ls $GS_ARGS "gs://$BUCKET" \
         >"$TMPDIR/gcp_read.out" 2>"$TMPDIR/gcp_read.err"
-    READABLE=false
-    WRITABLE=false
 
     if [ $? -eq 0 ]; then
         READABLE=true
         log "Bucket is readable"
+
+        if [ "$GS_ARGS" = "-n" ]; then
+            log "Dumping public objects to $OUTPUT_FILE"
+            gsutil ls -r $GS_ARGS "gs://$BUCKET/**" \
+            | sed 's|gs://|https://storage.googleapis.com/|' >> "$OUTPUT_FILE"
+        fi
     else
         warn "Bucket not readable"
         cat "$TMPDIR/gcp_read.err"
     fi
 
-    # Write test
+    # WRITE
+    log "Testing WRITE access"
     gsutil cp $GS_ARGS "$TESTFILE" "gs://$BUCKET/$TESTFILE" \
         >"$TMPDIR/gcp_write.out" 2>"$TMPDIR/gcp_write.err"
 
@@ -146,26 +183,31 @@ check_gcp() {
         warn "Bucket is NOT writable"
     fi
 
-    # Severity rating
-    if [ "$READABLE" = true ] && [ "$WRITABLE" = true ] && [ "$GS_ARGS" != "" ]; then
-        SEVERITY="CRITICAL (anonymous write)"
-    elif [ "$READABLE" = true ] && [ "$WRITABLE" = false ] && [ "$GS_ARGS" != "" ]; then
+    # SEVERITY
+    if $READABLE && $WRITABLE && [ "$GS_ARGS" != "" ]; then
+        SEVERITY="CRITICAL (anonymous read/write)"
+    elif $READABLE && ! $WRITABLE && [ "$GS_ARGS" != "" ]; then
         SEVERITY="HIGH (anonymous read)"
-    elif [ "$READABLE" = true ] && [ "$WRITABLE" = true ]; then
+    elif $READABLE && $WRITABLE; then
         SEVERITY="MEDIUM (authenticated write)"
-    elif [ "$READABLE" = true ]; then
+    elif $READABLE; then
         SEVERITY="LOW (authenticated read)"
     fi
 
-    log "Severity Rating: $SEVERITY"
+    log "Severity: $SEVERITY"
 }
 
-# ---------------- Azure ----------------
+# ---------------- AZURE ----------------
 check_azure() {
     require_cmd az
     CONTAINER="$1"
     ACCOUNT="$2"
+    READABLE=false
+    WRITABLE=false
     SEVERITY="INFO"
+
+    OUTPUT_FILE="files_${CONTAINER}.txt"
+    > "$OUTPUT_FILE"
 
     log "Checking Azure Blob container: $CONTAINER"
 
@@ -174,8 +216,6 @@ check_azure() {
         --account-name "$ACCOUNT" \
         --auth-mode login \
         >"$TMPDIR/az_read.out" 2>"$TMPDIR/az_read.err"
-    READABLE=false
-    WRITABLE=false
 
     if [ $? -eq 0 ]; then
         READABLE=true
@@ -185,7 +225,8 @@ check_azure() {
         cat "$TMPDIR/az_read.err"
     fi
 
-    # Write test
+    # WRITE
+    log "Testing WRITE access"
     az storage blob upload \
         --container-name "$CONTAINER" \
         --account-name "$ACCOUNT" \
@@ -206,16 +247,14 @@ check_azure() {
         warn "Container is NOT writable (Azure requires auth)"
     fi
 
-    # Severity rating
-    if [ "$READABLE" = true ] && [ "$WRITABLE" = true ]; then
-        SEVERITY="MEDIUM (authenticated write)"
-    elif [ "$READABLE" = true ]; then
+    # SEVERITY
+    if $READABLE && $WRITABLE; then
+        SEVERITY="MEDIUM (authenticated read/write)"
+    elif $READABLE; then
         SEVERITY="LOW (authenticated read)"
-    else
-        SEVERITY="INFO (not readable)"
     fi
 
-    log "Severity Rating: $SEVERITY"
+    log "Severity: $SEVERITY"
 }
 
 # ---------------- MAIN ----------------
@@ -231,3 +270,5 @@ case "$1" in
         exit 1
         ;;
 esac
+
+log "Results saved to: $OUTPUT_FILE"
