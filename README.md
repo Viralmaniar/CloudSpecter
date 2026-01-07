@@ -35,3 +35,12 @@ Severity Rating: LOW (authenticated read)
 - HIGH: Public read-only buckets are sensitive (data exposure).
 - MEDIUM/LOW: Authenticated access; you can write/read only with credentials.
 - INFO/NONE: Private bucket; script cannot read it.
+
+# What CloudSpecter performs on each cloud providers storage account?
+
+| Provider | Read Test | Write Test | Anonymous Write         |
+| -------- | --------- | ---------- | ----------------------- |
+| AWS      | ✅         | ✅          | ✅                       |
+| GCP      | ✅         | ✅          | ✅                       |
+| Azure    | ✅         | ✅          | ❌ (platform limitation) |
+
