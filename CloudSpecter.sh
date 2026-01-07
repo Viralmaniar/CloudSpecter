@@ -42,7 +42,6 @@ echo -e "${RANDOM_COLOR}
                                                                   - @ManiarViral                                                                                                                                                                       
 ${NC}"
 
-#!/usr/bin/env bash
 
 # ---------------- CONFIG ----------------
 export AWS_EC2_METADATA_DISABLED=true
