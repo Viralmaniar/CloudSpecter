@@ -21,7 +21,14 @@ CloudSpecter is a multi-cloud bucket reconnaissance and permission testing tool 
 - Azure blob container<BR>
 ./cloudspector.sh azure mycontainer mystorageaccount
 
+High Severity Finding Output:
+
 <img width="1171" height="452" alt="image" src="https://github.com/user-attachments/assets/693c798d-7887-4440-b1e3-e0faab841618" />
+
+Critical Severity Finding Output:
+
+<img width="1120" height="449" alt="image" src="https://github.com/user-attachments/assets/f285edeb-fb94-4692-a611-a26ff4b6c32a" />
+
 
 # Example Output
 ```
