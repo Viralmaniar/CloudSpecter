@@ -21,6 +21,8 @@ CloudSpecter is a multi-cloud bucket reconnaissance and permission testing tool 
 - Azure blob container<BR>
 ./cloudspector.sh azure mycontainer mystorageaccount
 
+<img width="1171" height="452" alt="image" src="https://github.com/user-attachments/assets/693c798d-7887-4440-b1e3-e0faab841618" />
+
 # Example Output
 ```
 [*] Checking AWS S3 bucket: cisrc
