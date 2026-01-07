@@ -47,7 +47,7 @@ ${NC}"
 export AWS_EC2_METADATA_DISABLED=true
 set -o pipefail
 
-TESTFILE="frogy.txt"
+TESTFILE="hacker.txt"
 TMPDIR="$(mktemp -d)"
 GREEN="\e[92m"; RED="\e[91m"; YELLOW="\e[93m"; NC="\e[0m"
 
@@ -65,7 +65,7 @@ require_cmd() {
     command -v "$1" &>/dev/null || { error "Missing dependency: $1"; exit 1; }
 }
 
-echo "Frogy_was_here" > "$TESTFILE"
+echo "Hacker Was Here!" > "$TESTFILE"
 
 # ---------------- AWS ----------------
 check_aws() {
