@@ -27,7 +27,7 @@ High Severity Finding Output:
 
 Critical Severity Finding Output:
 
-<img width="1120" height="449" alt="image" src="https://github.com/user-attachments/assets/f285edeb-fb94-4692-a611-a26ff4b6c32a" />
+<img width="1120" height="449" alt="image" src="https://github.com/user-attachments/assets/e6abe3b4-9336-48ee-95af-da3afb56be39" />
 
 
 # Example Output
