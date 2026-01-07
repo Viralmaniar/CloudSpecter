@@ -6,19 +6,19 @@ CloudSpecter is a multi-cloud bucket reconnaissance and permission testing tool 
 
 # Examples 
 
-- AWS public bucket
+- AWS public bucket<BR>
 ./cloudspector.sh aws cisrc
 
-- AWS private bucket (with credentials configured)
+- AWS private bucket (with credentials configured)<BR>
 ./cloudspector.sh aws my-private-bucket
 
-- GCP public bucket
+- GCP public bucket<BR>
 ./cloudspector.sh gcp my-public-gcs-bucket
 
-- GCP private bucket
+- GCP private bucket<BR>
 ./cloudspector.sh gcp my-private-gcs-bucket
 
-- Azure blob container
+- Azure blob container<BR>
 ./cloudspector.sh azure mycontainer mystorageaccount
 
 # Example Output
