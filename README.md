@@ -21,3 +21,12 @@ Severity Rating: HIGH (anonymous read)
 [!] Container is NOT writable (Azure requires auth)
 Severity Rating: LOW (authenticated read)
 ```
+# Severity Rating
+
+| Scenario                                 | Severity        |
+| ---------------------------------------- | --------------- |
+| Readable + Writable (anonymous/public)   | **CRITICAL**    |
+| Readable only (anonymous/public)         | **HIGH**        |
+| Readable + Writable (authenticated only) | **MEDIUM**      |
+| Readable only (authenticated)            | **LOW**         |
+| Not readable                             | **INFO / NONE** |
