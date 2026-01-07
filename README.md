@@ -30,3 +30,8 @@ Severity Rating: LOW (authenticated read)
 | Readable + Writable (authenticated only) | **MEDIUM**      |
 | Readable only (authenticated)            | **LOW**         |
 | Not readable                             | **INFO / NONE** |
+
+- CRITICAL: Any bucket/container that allows anonymous write is misconfigured and dangerous.
+- HIGH: Public read-only buckets are sensitive (data exposure).
+- MEDIUM/LOW: Authenticated access; you can write/read only with credentials.
+- INFO/NONE: Private bucket; script cannot read it.
