@@ -5,7 +5,7 @@
 CloudSpecter is a multi-cloud bucket reconnaissance and permission testing tool for AWS S3, Google Cloud Storage, and Azure Blob Storage. It detects publicly accessible or misconfigured buckets/containers by safely testing read and write permissions, making it ideal for red team operations and cloud security assessments.
 
 # Example Output
-
+```
 [*] Checking AWS S3 bucket: cisrc
 [*] Bucket is readable
 [*] Bucket is WRITABLE
@@ -20,4 +20,4 @@ Severity Rating: HIGH (anonymous read)
 [*] Container is readable
 [!] Container is NOT writable (Azure requires auth)
 Severity Rating: LOW (authenticated read)
-
+```
